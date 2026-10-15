@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: EcoCluster_postgres
+    environment:
+      POSTGRES_USER: finops
+      POSTGRES_PASSWORD: finops123
+      POSTGRES_DB: finops_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finops -d finops_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
+  spark:
+    image: apache/spark:3.5.1-python3
+    container_name: EcoCluster_spark
+    user: root
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+  streamlit:
+    build: ./src/dashboard
+    container_name: EcoCluster_streamlit
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src/dashboard:/app
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://finops:finops123@postgres:5432/finops_db
+
+
+volumes:
+  postgres_data:

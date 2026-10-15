@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv
+
+data/raw/*
+data/parquet_clean
+!data/raw/.gitkeep
+!data/parquet_clean/.gitkeep
+
+!data/catalogs/
+!data/catalogs/*.csv
+
+spark-warehouse/
+.idea/
+.vscode/
+.DS_Store
